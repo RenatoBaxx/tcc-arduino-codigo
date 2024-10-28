@@ -1,0 +1,48 @@
+#include <SPI.h>
+#include <MFRC522.h>
+
+#define RST_PIN 2      // Pino de Reset
+#define SS_PIN 9       // Pino de Seleção de Slave (SDA)
+#define BUZZER_PIN 8   // Pino do buzzer
+#define LED_PIN 10     // Pino do LED
+#define BUTTON_PIN 7   // Pino do botão
+
+MFRC522 rfid(SS_PIN, RST_PIN);  // Instância do MFRC522
+
+bool buttonPressed = false;  // Estado do botão
+
+void setup() {
+  Serial.begin(9600);  // Inicializa a comunicação serial
+  SPI.begin();         // Inicializa a comunicação SPI
+  rfid.PCD_Init();     // Inicializa o módulo RFID
+
+  pinMode(BUZZER_PIN, OUTPUT);   // Configura o buzzer como saída
+  pinMode(LED_PIN, OUTPUT);      // Configura o LED como saída
+  pinMode(BUTTON_PIN, INPUT_PULLUP);  // Configura o botão como entrada com pull-up interno
+
+  digitalWrite(LED_PIN, HIGH);  // Inicia com o LED aceso
+  Serial.println("Aproxime uma tag RFID...");
+}
+
+void loop() {
+  // Verifica se o botão foi pressionado
+  if (digitalRead(BUTTON_PIN) == LOW && !buttonPressed) {
+    buttonPressed = true;  // Marca que o botão está pressionado
+    digitalWrite(LED_PIN, LOW);  // Apaga o LED
+    Serial.println("Botão pressionado: LED apagado.");
+  }
+
+  // Verifica se o botão foi solto
+  if (digitalRead(BUTTON_PIN) == HIGH && buttonPressed) {
+    buttonPressed = false;  // Marca que o botão foi liberado
+    digitalWrite(LED_PIN, HIGH);  // Acende o LED
+    Serial.println("Botão solto: LED aceso e aviso sonoro.");
+
+    // Apito no buzzer
+    tone(BUZZER_PIN, 1000);  // Frequência de 1000 Hz
+    delay(200);  // Toca por 200ms
+    noTone(BUZZER_PIN);  // Desliga o som do buzzer
+  }
+
+  delay(50);  // Pequeno delay para evitar leituras excessivas
+}
